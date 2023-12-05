@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>参与抽奖</title>
+ 
+  </head>
+  <body>
+    <script>
+      function initInfo(){
+        var cj_id = 1;
+        const url = 'https://example.com/api/endpoint';
+        const data = {
+          cj_id: 1,
+          cookie_id: generateDeviceId(cj_id)
+        };
+  
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Success:', data);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+  
+      }
+    </script>
+     
+  </body>
+
+  
+  <script>
+
+    function initInfo(){
+      const url = 'https://example.com/api/endpoint';
+      const data = {
+        key1: 'value1',
+        key2: 'value2'
+      };
+
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Success:', data);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+
+    }
+    function getUUID(){
+      var uuid = getCookie()
+      if (uuid != null){
+        return uuid
+      }
+      uuid = generateDeviceId()
+      setCookie( uuid)
+      return uuid
+    }
+    // 生成随机的设备ID
+    function generateDeviceId(cjid) {
+      var chars = '0123456789abcdef';
+      var deviceId = '';
+
+      for (var i = 0; i < 32; i++) {
+        deviceId += chars[Math.floor(Math.random() * chars.length)];
+      }
+      return deviceId+"-"+cjid;
+    }
+
+    // 设置cookie
+    function setCookie( value) {
+      name = "uuid";
+      document.cookie = name + '=' + value + '; path=/';
+    }
+
+    // 获取cookie
+    function getCookie() {
+      name = "uuid";
+      var match = document.cookie.match(new RegExp(name + '=([^;]+)'));
+      return match ? match[1] : null;
+    }
+
+  </script>
+</html>

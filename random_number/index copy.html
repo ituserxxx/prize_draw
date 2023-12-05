@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- 规定浏览器的行为和渲染 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!-- 使得网页在移动设备上正确的缩放 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>转盘游戏</title>
+ 
+</head>
+<style>
+
+</style>
+<body>
+    <div id="my-lucky"></div>
+
+</body>
+</html>
+<style type="text/css">
+    body {
+      background-color: #c7d8b7; /*网页背景颜色*/
+    }
+  </style>
+  <script>
+    const myLucky = new LuckyCanvas.LuckyWheel('#my-lucky', {
+      width: '600px',
+      height: '600x',
+      blocks: [{ padding: '10px', background: '#617df2' }],
+      /*抽奖相关修改，详细请看：https://100px.net/docs/wheel.html*/
+      prizes: [
+        { background: '#e9e8fe', fonts: [{ text: '奖品1', fontSize: '12px', top: '10%' }], range: 20 },/*0*/
+        { background: '#b8c5f2', fonts: [{ text: '奖品2', fontSize: '12px', top: '10%' }], range: 20 },
+        { background: '#e9e8fe', fonts: [{ text: '奖品3', fontSize: '12px', top: '10%' }], range: 20 },
+        { background: '#b8c5f2', fonts: [{ text: '奖品4', fontSize: '12px', top: '10%' }], range: 20 },
+        { background: '#e9e8fe', fonts: [{ text: '奖品5', fontSize: '12px', top: '10%' }], range: 20 },
+        { background: '#b8c5f2', fonts: [{ text: '奖品6', fontSize: '12px', top: '10%' }], range: 20 },/*5*/
+      ],
+      buttons: [
+        { radius: '40%', background: '#617df2' },
+        { radius: '35%', background: '#afc8ff' },
+        {
+          radius: '30%', background: '#869cfa',
+          pointer: true,
+          fonts: [{ text: '开始', top: '-10px' }]
+        },
+      ],
+      start: function () {
+        // 开始游戏
+        myLucky.play()
+        // 使用定时器模拟接口
+        setTimeout(() => {
+          // 结束游戏
+          myLucky.stop(5)/*括号中可指定奖池对应序号的选项，从0开始*/
+        }, 3000)
+      }
+    })
+  </script>
