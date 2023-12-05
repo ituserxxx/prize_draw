@@ -2,96 +2,140 @@
 <html>
   <head>
     <title>参与抽奖</title>
- 
+    <meta charset="UTF-8">
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+  
+      .content {
+        text-align: center;
+
+      }
+  
+      .input-group {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 10px;
+        background-color: #f2f2f2;
+      }
+  
+      .input-group input[type="text"] {
+        flex: 1;
+        padding: 10px;
+        margin-right: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 50px;
+      }
+  
+      .input-group button[type="submit"] {
+        padding: 10px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 37px;
+      }
+    </style>
   </head>
   <body>
-    <script>
+    <div class="content">
+      <p id="gs_name" style="font-size: 60px;">抽奖信息获取中~</p>
+      <div id="ope">
+      </div>
+    </div>
+    <div class="input-group">
+      <input type="text" placeholder="请输入文本...">
+      <button type="submit">发送</button>
+    </div>
+  </body>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // 获取当前 URL 参数
+      var searchParams = new URLSearchParams(window.location.search);
+      console.log("window.location--",window.location)
+      // 获取特定参数的值
+      var cj_id = searchParams.get("cj_id"); 
+      initInfo();
       function initInfo(){
         var cj_id = 1;
-        const url = 'https://example.com/api/endpoint';
+        const url = window.location+"/get_cj_info";
         const data = {
-          cj_id: 1,
-          cookie_id: generateDeviceId(cj_id)
+          cj_id: cj_id,
         };
-  
         fetch(url, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            "uid": generateDeviceId(cj_id),
           },
           body: JSON.stringify(data)
         })
         .then(response => response.json())
-        .then(data => {
-          console.log('Success:', data);
+        .then(resizeBy => {
+          console.log('Success:', res);
+          const opeDiv = document.getElementById('ope');
+          if (res.code === 0){
+              document.getElementById("gs_name").innerHTML = res.data.gs_name
+              document.getElementById("ope").text = res.data.gs_name
+              if(res.data.number === 0){
+                const nb = document.createElement('button');
+                nb.textContent = '点击参与';
+                opeDiv.appendChild(button);
+              }else{
+                 // 或者创建一个<p>标签
+                const pTag = document.createElement('p');
+                pTag.textContent = res.data.number;
+                opeDiv.appendChild(pTag);
+              }
+          }
         })
         .catch(error => {
           console.error('Error:', error);
         });
-  
       }
-    </script>
-     
-  </body>
-
   
-  <script>
-
-    function initInfo(){
-      const url = 'https://example.com/api/endpoint';
-      const data = {
-        key1: 'value1',
-        key2: 'value2'
-      };
-
-      fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Success:', data);
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-
-    }
-    function getUUID(){
-      var uuid = getCookie()
-      if (uuid != null){
+      // 客户端唯一 uuid
+      function getUUID(){
+        var uuid = getCookie()
+        if (uuid != null){
+          return uuid
+        }
+        uuid = generateDeviceId()
+        setCookie( uuid)
         return uuid
       }
-      uuid = generateDeviceId()
-      setCookie( uuid)
-      return uuid
-    }
-    // 生成随机的设备ID
-    function generateDeviceId(cjid) {
-      var chars = '0123456789abcdef';
-      var deviceId = '';
+      // 生成随机的设备ID
+      function generateDeviceId(cjid) {
+        var chars = '0123456789abcdef';
+        var deviceId = '';
 
-      for (var i = 0; i < 32; i++) {
-        deviceId += chars[Math.floor(Math.random() * chars.length)];
+        for (var i = 0; i < 32; i++) {
+          deviceId += chars[Math.floor(Math.random() * chars.length)];
+        }
+        return deviceId+"-"+cjid;
       }
-      return deviceId+"-"+cjid;
-    }
 
-    // 设置cookie
-    function setCookie( value) {
-      name = "uuid";
-      document.cookie = name + '=' + value + '; path=/';
-    }
+      // 设置cookie
+      function setCookie( value) {
+        name = "uuid";
+        document.cookie = name + '=' + value + '; path=/';
+      }
 
-    // 获取cookie
-    function getCookie() {
-      name = "uuid";
-      var match = document.cookie.match(new RegExp(name + '=([^;]+)'));
-      return match ? match[1] : null;
-    }
-
+      // 获取cookie
+      function getCookie() {
+        name = "uuid";
+        var match = document.cookie.match(new RegExp(name + '=([^;]+)'));
+        return match ? match[1] : null;
+      }
+    })
   </script>
 </html>

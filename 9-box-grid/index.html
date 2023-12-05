@@ -133,7 +133,6 @@
                     input.style.boxSizing = 'border-box';
                     input.addEventListener('blur', function () {
                         var text = input.value.trim().substring(0, 25); // 获取输入的文本并进行限制处理
-
                         if (text.length == 0){
                             text= "请双击设置标题";
                         }
