@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>九宫格抽奖</title>
+        <style>
+
+        #cont {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            /* height: 85vh; */
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            /* grid-template-rows: repeat(3, 1fr); */
+            height: 100%;
+        }
+        .cell {
+            font-size: 40px; 
+            border: 1px solid #ccc;
+            padding: 50px;
+            text-align: center;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #st_btn{
+            background-color: rgb(132, 246, 139);
+        }
+        #reset {
+            font-size: 20px; 
+            margin-top: 20px; 
+        }
+        #comp{
+            display: block;
+            text-align: center;
+            font-size: 55px; 
+            padding-top: 55px;
+            margin-bottom: 75px; 
+        }
+    </style>
+    </head>
+    <body>
+   
+        <div id="cont">
+            <div class="grid" id="comp">
+                xxx有限公司年度抽奖活动
+            </div>
+            <div class="grid">
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell" id="st_btn"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+            </div>
+            <div>
+                <button id="reset">重新开始</button>
+            </div>
+            <div>
+                <br>
+                提示：<br>
+                1、双击公司名称设置公司（最长25个字符）
+                <br>
+                2、双击宫格设置奖品名称 （最长15个字符）
+                <br>
+                3、点击开始或者结束
+            </div>
+        </div>
+        
+    </body>
+</html>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var jpList =[
+            "apple 20pro",
+            "华为mate90",
+            "小米 88pro",
+            "apple watch S20",
+            "",
+            "谢谢惠顾",
+            "apple watch S100",
+            "小米 18pro",
+            "谢谢惠顾",
+        ];
+        var cells = document.querySelectorAll('.cell');
+        var cell5 = document.getElementById('st_btn');
+        var interval;
+        var isStart = true;
+        cell5.innerHTML = '开始';
+        var speed = 55
+       
+        initJpName();
+
+        // 初始化宫格内容编辑
+        cells.forEach(function (cell,i) {
+            if (i !== 4){
+                cell.addEventListener('dblclick', function () {
+                    var input = document.createElement('input');
+                    input.maxLength = 15; // 设置输入框最大长度为15个字符
+                    input.style.width = '100%';
+                    input.style.boxSizing = 'border-box';
+                    input.addEventListener('blur', function () {
+                        var text = input.value.trim().substring(0, 15); // 获取输入的文本并进行限制处理
+                        if (text.length == 0){
+                            text= "谢谢惠顾";
+                        }
+                        cell.innerHTML = text; // 将文本显示在宫格中
+                        cell.removeChild(input); // 移除输入框
+                    });
+                    cell.innerHTML = '';
+                    cell.appendChild(input);
+                    input.focus();
+                });
+            }
+        });
+        
+        // 初始化公司名称编辑
+        var comp =  document.getElementById('comp')
+        comp.addEventListener('dblclick', function () {
+                    var input = document.createElement('input');
+                    input.maxLength = 25; // 设置输入框最大长度为20个字符
+                    input.style.width = '100%';
+                    input.style.boxSizing = 'border-box';
+                    input.addEventListener('blur', function () {
+                        var text = input.value.trim().substring(0, 25); // 获取输入的文本并进行限制处理
+
+                        if (text.length == 0){
+                            text= "请双击设置标题";
+                        }
+                        comp.innerHTML = text; // 将文本显示在宫格中
+                        comp.removeChild(input); // 移除输入框
+                    });
+                    comp.innerHTML = '';
+                    comp.appendChild(input);
+                    input.focus();
+                });
+        cell5.addEventListener('click', function () {
+            if (isStart) {
+                cell5.innerHTML = '结束';
+                cell5.style.backgroundColor="#f11751"
+                isStart = false;
+                interval = setInterval(randomizeCell,speed );
+            } else {
+                cell5.innerHTML = '开始';
+                document.getElementById('st_btn').style.backgroundColor="rgb(132, 246, 139)"
+                isStart = true;
+                clearInterval(interval);
+            }
+        });
+
+        document.getElementById('reset').addEventListener('click', function () {
+            cell5.innerHTML = '开始';
+            isStart = true;
+            clearInterval(interval);
+            cell5.style.backgroundColor="rgb(132, 246, 139)"
+            cells.forEach(function (cell,i) {
+                if (i!==4){
+                    cell.style.backgroundColor = '';
+                }
+            });
+        });
+
+        var number_list=[0,1,2,5,8,7,6,3];
+        var index = 0;
+        function randomizeCell() {
+            cells.forEach(function (cell,i) {
+                if (i!==4){
+                    cell.style.backgroundColor = '';
+                }
+            });
+            if (index===8){
+                index = 0;
+            }
+            cells[number_list[index]].style.backgroundColor = 'yellow';
+            index++;
+        }
+
+        function initJpName(){
+            cells.forEach(function (cell,index) {
+                if (index!==4){
+                    cell.innerHTML= jpList[index];
+                }
+            });
+        }
+    });
+
+</script>
