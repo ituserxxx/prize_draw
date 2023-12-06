@@ -92,7 +92,7 @@
         请我吃肯德基疯狂星期四吧 </p><br>
     <a href="https://beian.miit.gov.cn/" target="_blank">蜀ICP备18038087号-5</a>
 </div>
-
+<p id="uuid"></p>
 
 </body>
 <style>
@@ -112,7 +112,8 @@
 </style>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        console.log("uuid", getUUID())
+        kkk = document.getElementById('uuid');
+        kk.innerHTML=getUUID()
         // 客户端唯一 uuid
         function getUUID() {
             var uuid = getCookie()
