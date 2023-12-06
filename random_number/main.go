@@ -13,6 +13,19 @@ import (
 
 var cache sync.Map
 
+func main() {
+	data := "http://www.cj.yirisanqiu.com/" // 自定义参数的 URL 或文本
+	filePath := "index_qrcode.png"          // 存放目录和文件名
+
+	// 生成二维码
+	err := qrcode.WriteFile(data, qrcode.Medium, 256, filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("二维码生成成功！")
+}
+
 /*
 	设置缓存
 
@@ -27,7 +40,7 @@ value, found := cache.Load("key")
 // 删除缓存
 cache.Delete("key")
 */
-func main() {
+func main2() {
 
 	fmt.Println("http://ip:8001")
 	// 启动HTTP服务器
