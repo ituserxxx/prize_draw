@@ -213,25 +213,26 @@ func (uc *uLogic) HandlerSendCjDyamicMsg(w http.ResponseWriter, r *http.Request)
 	uuid := r.Header.Get("uuid")
 	// 获取当当前用户的编号
 	var uNumber int
-	if v, ok := cjManager[lid]; ok == false {
+	v, ok := cjManager[lid]
+	if ok == false {
 		respErr(w, "cj 不存在 "+err.Error())
 		return
-	} else {
-		for _, u := range v.JoinUserList {
-			if u.UUID == uuid {
-				uNumber = u.CjNumber
-				break
-			}
-		}
-		if uNumber == 0 {
-			respErr(w, "请先参与该活动")
-			return
-		}
-		cm, isTrue := Manager.Clients[lid]
-		if isTrue {
-			cm.Send <- []byte(msg)
+	}
+	for _, u := range v.JoinUserList {
+		if u.UUID == uuid {
+			uNumber = u.CjNumber
+			break
 		}
 	}
+	if uNumber == 0 {
+		respErr(w, "请先参与该活动")
+		return
+	}
+	_, isTrue := Manager.Clients[lid]
+	if isTrue {
+		SendToWeb(lid, msg)
+	}
+
 }
 
 // 自定义中间件函数
