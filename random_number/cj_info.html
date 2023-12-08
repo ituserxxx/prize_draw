@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>参与抽奖</title>
+    <meta charset="UTF-8">
+
+  </head>
+  <body>
+
+  </body>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var source = new EventSource("/events");
+      var uuid = getUUID();
+      console.log('new uuid=>',uuid);
+      // 连接成功后会触发 open 事件
+      source.addEventListener('open', () => {
+        console.log('Connected');
+      }, false);
+
+      // 服务器发送信息到客户端时，如果没有 event 字段，默认会触发 message 事件
+      source.addEventListener('message', e => {
+        console.log(`no event data: ${e.data}`);
+      }, false);
+
+      // 自定义 EventHandler，在收到 event1 字段为 event1 的消息时触发
+      source.addEventListener(uuid, e => {
+        console.log(`event1 data: ${e.data}`); // => data: 7
+      }, false);
+
+
+      // 客户端唯一 uuid
+      function getUUID(){
+        var uuid = getU()
+        console.log("old uuid=>",uuid)
+        if (uuid != null){
+          return uuid
+        }
+        uuid = generateDeviceId()
+        setU( uuid);
+        return uuid;
+      }
+
+      // 生成随机的设备ID
+      function generateDeviceId() {
+        var chars = '0123456789abcdef';
+        var deviceId = '';
+        for (var i = 0; i < 32; i++) {
+          deviceId += chars[Math.floor(Math.random() * chars.length)];
+        }
+        return deviceId;
+      }
+
+      function setU( value) {
+        var key = "uuid";
+        localStorage.setItem(key, value);
+      }
+
+      function getU() {
+        var key = "uuid";
+        var v =localStorage.getItem(key);
+        return v ? v : null;
+      }
+    })
+  </script>
+</html>

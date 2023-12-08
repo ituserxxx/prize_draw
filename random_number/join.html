@@ -59,34 +59,39 @@
   </body>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
-      // 获取当前 URL 参数
-      var searchParams = new URLSearchParams(window.location.search);
-      console.log("window.location--",window.location)
-      // 获取特定参数的值
-      var cj_id = searchParams.get("cj_id"); 
       initInfo();
       function initInfo(){
-        var cj_id = 1;
-        const url = window.location+"/get_cj_info";
+
+        // 获取当前 URL 参数
+        var searchParams = new URLSearchParams(window.location.search);
+
+        // 获取特定参数的值
+        // var cj_id = searchParams.get("lid");
+        // const url = window.location+"/get_cj_info";
+
+        var uuid = getUUID();
+        var cj_id =uuid;
+        const url = "http://localhost:8001/api/get_cj_info";
         const data = {
           cj_id: cj_id,
         };
+        console.log("init info data=>\n",data);
         fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            "uid": generateDeviceId(cj_id),
+            "uuid":uuid,
           },
           body: JSON.stringify(data)
         })
         .then(response => response.json())
-        .then(resizeBy => {
+        .then(res => {
           console.log('Success:', res);
           const opeDiv = document.getElementById('ope');
-          if (res.code === 0){
+          if (res.code === 33){
               document.getElementById("gs_name").innerHTML = res.data.gs_name
               document.getElementById("ope").text = res.data.gs_name
-              if(res.data.number === 0){
+              if(res.data.number === 33){
                 const nb = document.createElement('button');
                 nb.textContent = '点击参与';
                 opeDiv.appendChild(button);
@@ -105,36 +110,35 @@
   
       // 客户端唯一 uuid
       function getUUID(){
-        var uuid = getCookie()
+        var uuid = getU()
+        console.log("uuid=>",uuid)
         if (uuid != null){
           return uuid
         }
         uuid = generateDeviceId()
-        setCookie( uuid)
-        return uuid
+        setU( uuid);
+        return uuid;
       }
+
       // 生成随机的设备ID
-      function generateDeviceId(cjid) {
+      function generateDeviceId() {
         var chars = '0123456789abcdef';
         var deviceId = '';
-
         for (var i = 0; i < 32; i++) {
           deviceId += chars[Math.floor(Math.random() * chars.length)];
         }
-        return deviceId+"-"+cjid;
+        return deviceId;
       }
 
-      // 设置cookie
-      function setCookie( value) {
-        name = "uuid";
-        document.cookie = name + '=' + value + '; path=/';
+      function setU( value) {
+        var key = "uuid";
+        localStorage.setItem(key, value);
       }
 
-      // 获取cookie
-      function getCookie() {
-        name = "uuid";
-        var match = document.cookie.match(new RegExp(name + '=([^;]+)'));
-        return match ? match[1] : null;
+      function getU() {
+        var key = "uuid";
+        var v =localStorage.getItem(key);
+        return v ? v : null;
       }
     })
   </script>
