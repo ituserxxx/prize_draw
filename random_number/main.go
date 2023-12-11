@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	qrcode "github.com/skip2/go-qrcode"
@@ -66,6 +67,7 @@ func RegisterRoute() http.Handler {
 	router.HandleFunc("/api/save_gs_name", middleware(Crontroller.HandlerSaveGsName))            // 保存公司名称
 	router.HandleFunc("/api/user_view_cj", middleware(Crontroller.HandlerUserViewCj))            // 用户查看抽奖
 	router.HandleFunc("/api/user_join_cj", middleware(Crontroller.HandlerUserJoinCj))            // 用户参与抽奖
+	router.HandleFunc("/api/save_zj_user", middleware(Crontroller.HandlerSaveZjUser))            // 用户参与抽奖
 	router.HandleFunc("/api/send_cj_dyamic_msg", middleware(Crontroller.HandlerSendCjDyamicMsg)) // 发送抽奖互动消息
 	return handler
 }
@@ -76,8 +78,9 @@ type uLogic struct {
 }
 
 type cjOption struct {
-	Name string `json:"name"` // 奖品名称	Level int    `json:"level"` // 几等奖
-	Num  int    `json:"num"`  //奖品数量
+	Name   string   `json:"name"`    // 奖品名称	Level int    `json:"level"` // 几等奖
+	Num    int      `json:"num"`     //奖品数量
+	ZjList []string `json:"zj_list"` //中奖人编号列表
 }
 type JoinUser struct {
 	UUID     string `json:"uuid"`
@@ -232,6 +235,65 @@ func (uc *uLogic) HandlerUserViewCj(w http.ResponseWriter, r *http.Request) {
 			Num:    userNum,
 			GsName: v.GsName,
 		})
+	}
+}
+
+type SaveZjUserReq struct {
+	LID  string `json:"lid"`
+	Leve int    `json:"leve"`
+}
+
+func (uc *uLogic) HandlerSaveZjUser(w http.ResponseWriter, r *http.Request) {
+	var req SaveZjUserReq
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		respErr(w, "json unmarshal err "+err.Error())
+		return
+	}
+
+	zjUser := r.Header.Get("zj_str")
+	if strings.TrimSpace(zjUser) == "" {
+		http.Error(w, " Not Allowed Connect ", http.StatusBadRequest)
+		return
+	}
+	req.LID = strings.TrimSpace(req.LID)
+	if len(req.LID) == 0 {
+		respErr(w, "活动id不能为空")
+		return
+	}
+	if req.Leve == 0 {
+		respErr(w, "leve err")
+		return
+	}
+	if req.LID != r.Header.Get("uuid") {
+		http.Error(w, " Not Allowed Connect ", http.StatusBadRequest)
+		return
+	}
+
+	decodedBytes, err := base64.StdEncoding.DecodeString(zjUser)
+	if err != nil {
+		http.Error(w, " Not Allowed Connect ", http.StatusBadRequest)
+		return
+	}
+
+	decodedStr := string(decodedBytes)
+	zjidL := strings.Split(decodedStr, ",")
+
+	v, ok := cjManager[req.LID]
+	if ok == false {
+		respErr(w, "抽奖不存在~~")
+		return
+	}
+	if ok == true {
+		v.Lock.RLock()
+		defer v.Lock.RUnlock()
+		for i, _ := range v.L {
+			if i+1 == req.Leve {
+				v.L[i].ZjList = zjidL
+				break
+			}
+		}
+		respOk(w, "ok")
 	}
 }
 func (uc *uLogic) HandlerUserJoinCj(w http.ResponseWriter, r *http.Request) {
