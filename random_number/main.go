@@ -57,7 +57,6 @@ func SendSee(id, v string) {
 
 func RegisterRoute() http.Handler {
 	router := http.NewServeMux()
-
 	//建立路由规则，将所有请求交给静态文件处理器处理
 	router.Handle("/", http.FileServer(http.Dir("./")))
 	router.Handle("/cj_qrcode", http.FileServer(http.Dir("./cj_qrcode/")))

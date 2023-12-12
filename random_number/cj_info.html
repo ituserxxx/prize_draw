@@ -13,7 +13,7 @@
       var uuid = getUUID();
       uuid = "d18870655da7d657922a59e7e46fac92";
       console.log('new uuid=>',uuid);
-      var source = new EventSource("http://127.0.0.1:8001/events");
+      var source = new EventSource("http://127.0.0.1:8991/events");
 
       // 连接成功后会触发 open 事件
       source.addEventListener('open', () => {
