@@ -67,7 +67,7 @@ func RegisterRoute() http.Handler {
 	router.HandleFunc("/api/save_gs_name", middleware(Crontroller.HandlerSaveGsName))            // 保存公司名称
 	router.HandleFunc("/api/user_view_cj", middleware(Crontroller.HandlerUserViewCj))            // 用户查看抽奖
 	router.HandleFunc("/api/user_join_cj", middleware(Crontroller.HandlerUserJoinCj))            // 用户参与抽奖
-	router.HandleFunc("/api/save_zj_user", middleware(Crontroller.HandlerSaveZjUser))            // 用户参与抽奖
+	router.HandleFunc("/api/save_zj_user", middleware(Crontroller.HandlerSaveZjUser))            // 保存中奖用户编号
 	router.HandleFunc("/api/send_cj_dyamic_msg", middleware(Crontroller.HandlerSendCjDyamicMsg)) // 发送抽奖互动消息
 	return handler
 }
