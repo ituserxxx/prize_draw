@@ -59,7 +59,7 @@ func RegisterRoute() http.Handler {
 	//建立路由规则，将所有请求交给静态文件处理器处理
 	router.Handle("/", http.FileServer(http.Dir("./")))
 	router.Handle("/cj_qrcode", http.FileServer(http.Dir("./cj_qrcode/")))
-	router.Handle("/events", sseHandler)
+	router.Handle("/events", corsMiddleware(sseHandler))
 	// POST请求处理
 	router.HandleFunc("/hello", middleware(apiHandlerTest))                                      // 测试
 	router.HandleFunc("/api/get_cj_info", middleware(Crontroller.HandlerGetCjInfo))              // 获取抽奖信息
@@ -402,9 +402,9 @@ func middleware(next http.HandlerFunc) http.HandlerFunc {
 }
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")                          // 设置允许跨域的域名列表
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")        // 设置允许跨域的请求方式
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type,X-token,uuid") // 设置允许的请求头部
+		w.Header().Set("Access-Control-Allow-Origin", "*")                                            // 设置允许跨域的域名列表
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")                          // 设置允许跨域的请求方式
+		w.Header().Set("Access-Control-Allow-Headers", "text/event-stream,Content-Type,X-token,uuid") // 设置允许的请求头部
 		// 对于预检请求（OPTIONS），直接返回成功
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
