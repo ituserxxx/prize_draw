@@ -61,7 +61,6 @@ func RegisterRoute() http.Handler {
 	//建立路由规则，将所有请求交给静态文件处理器处理
 
 	router.Handle("/", http.FileServer(http.Dir("web")))
-	router.Handle("/mobile", http.FileServer(http.Dir("web")))
 	router.Handle("/cj_qrcode/", http.StripPrefix("/cj_qrcode/", http.FileServer(http.Dir("./cj_qrcode"))))
 	router.Handle("/events", sseHandler)
 
