@@ -13,18 +13,19 @@ import (
 	"sync"
 )
 
+var cache sync.Map
+
 var sseHandler eventsource.EventSource
 
 func main() {
 	// 开启一个 sse
 	sseHandler = eventsource.New(nil, nil)
 	defer sseHandler.Close()
-	fmt.Println("http://ip:8001")
-	// 启动HTTP服务器
-	http.ListenAndServe(":8001", RegisterRoute())
-}
 
-var cache sync.Map
+	fmt.Println("http://ip:8002")
+	// 启动HTTP服务器
+	http.ListenAndServe(":8002", RegisterRoute())
+}
 
 // cache Demo
 func cacheDemo() {
@@ -53,23 +54,29 @@ func qrcodeDemo() {
 func SendSee(id, v string) {
 	sseHandler.SendEventMessage(v, id, id)
 }
+
+// echo "OPENAI_API_KEY=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" > .env
 func RegisterRoute() http.Handler {
 	router := http.NewServeMux()
-	handler := corsMiddleware(router)
 	//建立路由规则，将所有请求交给静态文件处理器处理
-	router.Handle("/", http.FileServer(http.Dir("./")))
-	router.Handle("/cj_qrcode", http.FileServer(http.Dir("./cj_qrcode/")))
-	router.Handle("/events", corsMiddleware(sseHandler))
+
+	router.Handle("/", http.FileServer(http.Dir("web")))
+	router.Handle("/cj_qrcode/", http.StripPrefix("/cj_qrcode/", http.FileServer(http.Dir("./cj_qrcode"))))
+	router.Handle("/events", sseHandler)
+
 	// POST请求处理
-	router.HandleFunc("/hello", middleware(apiHandlerTest))                                      // 测试
-	router.HandleFunc("/api/get_cj_info", middleware(Crontroller.HandlerGetCjInfo))              // 获取抽奖信息
-	router.HandleFunc("/api/save_cj_info", middleware(Crontroller.HandlerSaveCjInfo))            // 保存抽奖信息
-	router.HandleFunc("/api/save_gs_name", middleware(Crontroller.HandlerSaveGsName))            // 保存公司名称
-	router.HandleFunc("/api/user_view_cj", middleware(Crontroller.HandlerUserViewCj))            // 用户查看抽奖
-	router.HandleFunc("/api/user_join_cj", middleware(Crontroller.HandlerUserJoinCj))            // 用户参与抽奖
-	router.HandleFunc("/api/save_zj_user", middleware(Crontroller.HandlerSaveZjUser))            // 保存中奖用户编号
+	router.HandleFunc("/hello", middleware(apiHandlerTest))                           // 测试
+	router.HandleFunc("/api/get_cj_info", middleware(Crontroller.HandlerGetCjInfo))   // 获取抽奖信息
+	router.HandleFunc("/api/save_cj_info", middleware(Crontroller.HandlerSaveCjInfo)) // 保存抽奖信息
+	router.HandleFunc("/api/save_gs_name", middleware(Crontroller.HandlerSaveGsName)) // 保存公司名称
+	router.HandleFunc("/api/user_view_cj", middleware(Crontroller.HandlerUserViewCj)) // 用户查看抽奖
+	router.HandleFunc("/api/user_join_cj", middleware(Crontroller.HandlerUserJoinCj)) // 用户参与抽奖
+
+	router.HandleFunc("/api/save_zj_user", middleware(Crontroller.HandlerSaveZjUser)) // 保存中奖用户
+
 	router.HandleFunc("/api/send_cj_dyamic_msg", middleware(Crontroller.HandlerSendCjDyamicMsg)) // 发送抽奖互动消息
-	return handler
+
+	return router
 }
 
 var Crontroller = &uLogic{}
@@ -200,8 +207,9 @@ type JoinCjReq struct {
 }
 
 type UserViewCjResp struct {
-	Num    int    `json:"num"`
-	GsName string `json:"gs_name"`
+	Num    int        `json:"num"`
+	GsName string     `json:"gs_name"`
+	L      []cjOption `json:"l"`
 }
 
 func (uc *uLogic) HandlerUserViewCj(w http.ResponseWriter, r *http.Request) {
@@ -234,6 +242,7 @@ func (uc *uLogic) HandlerUserViewCj(w http.ResponseWriter, r *http.Request) {
 		respOk(w, UserViewCjResp{
 			Num:    userNum,
 			GsName: v.GsName,
+			L:      v.L,
 		})
 	}
 }
@@ -336,6 +345,7 @@ func (uc *uLogic) HandlerUserJoinCj(w http.ResponseWriter, r *http.Request) {
 			})
 			userNum = v.PersonTotal
 			SendSee(v.CJId, fmt.Sprintf("join-用户%s刚刚加入", uuid))
+			SendSee(v.CJId, fmt.Sprintf("num-%d", userNum))
 		}
 		respOk(w, userNum)
 	}
@@ -381,13 +391,21 @@ func (uc *uLogic) HandlerSendCjDyamicMsg(w http.ResponseWriter, r *http.Request)
 		respErr(w, "请先参与该活动")
 		return
 	}
-	SendSee(v.CJId, fmt.Sprintf("msg-用户%s说：", req.Msg))
+	SendSee(v.CJId, fmt.Sprintf("msg-抽奖号%d说：%s", uNumber, req.Msg))
 	respOk(w, "")
 }
 
 // 自定义中间件函数
 func middleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")                          // 设置允许跨域的域名列表
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")        // 设置允许跨域的请求方式
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type,X-token,uuid") // 设置允许的请求头部
+		// 对于预检请求（OPTIONS），直接返回成功
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 			return
@@ -400,20 +418,7 @@ func middleware(next http.HandlerFunc) http.HandlerFunc {
 		next(w, r)
 	}
 }
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")                                            // 设置允许跨域的域名列表
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")                          // 设置允许跨域的请求方式
-		w.Header().Set("Access-Control-Allow-Headers", "text/event-stream,Content-Type,X-token,uuid") // 设置允许的请求头部
-		// 对于预检请求（OPTIONS），直接返回成功
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-		// 继续执行下一个处理程序
-		next.ServeHTTP(w, r)
-	})
-}
+
 func apiHandlerTest(w http.ResponseWriter, r *http.Request) {
 	// 获取路由参数
 	name := r.URL.Query().Get("name")
@@ -463,7 +468,7 @@ func createQrcodeUrl(uuid string) error {
 	fileName := fmt.Sprintf("cj_qrcode/%s.png", uuid)
 
 	// 生成二维码
-	err := qrcode.WriteFile(fileName, qrcode.Medium, 256, fileName)
+	err := qrcode.WriteFile("http://www.cj.yirisanqiu.com/mobile?lid="+uuid, qrcode.Medium, 256, fileName)
 	if err != nil {
 		return err
 	}
