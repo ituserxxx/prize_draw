@@ -17,6 +17,8 @@ var cache sync.Map
 
 var sseHandler eventsource.EventSource
 
+var sseclients = make(map[string]chan string)
+
 func main() {
 	// 开启一个 sse
 	sseHandler = eventsource.New(nil, nil)
@@ -52,7 +54,12 @@ func qrcodeDemo() {
 }
 
 func SendSee(id, v string) {
-	sseHandler.SendEventMessage(v, id, id)
+	//sseHandler.SendEventMessage(v, id, id)
+
+	// 将客户端连接添加到列表
+	if _, exists := sseclients[id]; exists {
+		sseclients[id] <- v
+	}
 }
 
 // echo "OPENAI_API_KEY=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" > .env
@@ -61,7 +68,10 @@ func RegisterRoute() http.Handler {
 	//建立路由规则，将所有请求交给静态文件处理器处理
 	//router.Handle("/", http.FileServer(http.Dir("web")))
 	router.Handle("/cj_qrcode/", http.StripPrefix("/cj_qrcode/", http.FileServer(http.Dir("./cj_qrcode"))))
-	router.Handle("/events", sseHandler)
+
+	//router.Handle("/events", sseHandler)
+
+	router.Handle("/events", middlewareSse(Crontroller.HandlerSse))
 	// POST请求处理
 	router.HandleFunc("/hello", middleware(apiHandlerTest))                           // 测试
 	router.HandleFunc("/api/get_cj_info", middleware(Crontroller.HandlerGetCjInfo))   // 获取抽奖信息
@@ -112,7 +122,39 @@ type GetCjInfoResp struct {
 	JoinUserList []JoinUser `json:"join_user_list"`
 }
 
-// HandlerGetCjInfo 发起人才能进的抽奖信息页面
+func (uc *uLogic) HandlerSse(w http.ResponseWriter, r *http.Request) {
+	// 获取用户标识符
+	lid := r.URL.Query().Get("lid")
+
+	// 设置 SSE 的响应头
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	// 创建客户端连接通道
+	clientChan := make(chan string)
+
+	// 将客户端连接添加到列表
+	if _, exists := sseclients[lid]; !exists {
+		sseclients[lid] = clientChan
+	}
+
+	go func() {
+		// 监听客户端连接通道，将事件写入响应流
+		for {
+			select {
+			case event := <-clientChan:
+				w.Write([]byte(event))
+				w.(http.Flusher).Flush()
+			default:
+				// 长时间无事件时，发送空消息以避免连接超时
+				w.Write([]byte(":\n\n"))
+				w.(http.Flusher).Flush()
+			}
+		}
+	}()
+}
+
 func (uc *uLogic) HandlerGetCjInfo(w http.ResponseWriter, r *http.Request) {
 	var res = &GetCjInfoResp{
 		L:            make([]cjOption, 0),
@@ -416,7 +458,19 @@ func middleware(next http.HandlerFunc) http.HandlerFunc {
 		next(w, r)
 	}
 }
-
+func middlewareSse(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")                          // 设置允许跨域的域名列表
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type,X-token,uuid") // 设置允许的请求头部
+		// 对于预检请求（OPTIONS），直接返回成功
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		// 调用下一个处理函数
+		next(w, r)
+	}
+}
 func apiHandlerTest(w http.ResponseWriter, r *http.Request) {
 	// 获取路由参数
 	name := r.URL.Query().Get("name")
