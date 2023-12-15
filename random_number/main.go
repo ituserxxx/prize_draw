@@ -62,7 +62,6 @@ func RegisterRoute() http.Handler {
 	//router.Handle("/", http.FileServer(http.Dir("web")))
 	//router.Handle("/cj_qrcode/", http.StripPrefix("/cj_qrcode/", http.FileServer(http.Dir("./cj_qrcode"))))
 	router.Handle("/events", sseHandler)
-
 	// POST请求处理
 	router.HandleFunc("/hello", middleware(apiHandlerTest))                           // 测试
 	router.HandleFunc("/api/get_cj_info", middleware(Crontroller.HandlerGetCjInfo))   // 获取抽奖信息
