@@ -60,7 +60,7 @@ func RegisterRoute() http.Handler {
 	router := http.NewServeMux()
 	//建立路由规则，将所有请求交给静态文件处理器处理
 	//router.Handle("/", http.FileServer(http.Dir("web")))
-	//router.Handle("/cj_qrcode/", http.StripPrefix("/cj_qrcode/", http.FileServer(http.Dir("./cj_qrcode"))))
+	router.Handle("/cj_qrcode/", http.StripPrefix("/cj_qrcode/", http.FileServer(http.Dir("./cj_qrcode"))))
 	router.Handle("/events", sseHandler)
 	// POST请求处理
 	router.HandleFunc("/hello", middleware(apiHandlerTest))                           // 测试
