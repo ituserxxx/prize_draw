@@ -54,12 +54,12 @@ func qrcodeDemo() {
 }
 
 func SendSee(id, v string) {
-	//sseHandler.SendEventMessage(v, id, id)
+	sseHandler.SendEventMessage(v, id, id)
 
-	// 将客户端连接添加到列表
-	if _, exists := sseclients[id]; exists {
-		sseclients[id] <- v
-	}
+	//// 将客户端连接添加到列表
+	//if _, exists := sseclients[id]; exists {
+	//	sseclients[id] <- v
+	//}
 }
 
 // echo "OPENAI_API_KEY=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" > .env
@@ -69,9 +69,9 @@ func RegisterRoute() http.Handler {
 	//router.Handle("/", http.FileServer(http.Dir("web")))
 	router.Handle("/cj_qrcode/", http.StripPrefix("/cj_qrcode/", http.FileServer(http.Dir("./cj_qrcode"))))
 
-	//router.Handle("/events", sseHandler)
+	router.Handle("/events", sseHandler)
 
-	router.Handle("/events", middlewareSse(Crontroller.HandlerSse))
+	//router.Handle("/events", middlewareSse(Crontroller.HandlerSse))
 	// POST请求处理
 	router.HandleFunc("/hello", middleware(apiHandlerTest))                           // 测试
 	router.HandleFunc("/api/get_cj_info", middleware(Crontroller.HandlerGetCjInfo))   // 获取抽奖信息
