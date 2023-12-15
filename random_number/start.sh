@@ -5,6 +5,7 @@ PORT=8002
 
 
 function startapi(){
+  export GOPROXY=https://goproxy.cn
   rm -rf cj-server
   go build -o cj-server main.go
   chmod +x cj-serer
