@@ -22,9 +22,9 @@ func main() {
 	sseHandler = eventsource.New(nil, nil)
 	defer sseHandler.Close()
 
-	fmt.Println("http://ip:8001")
+	fmt.Println("http://ip:8002")
 	// 启动HTTP服务器
-	http.ListenAndServe(":8001", RegisterRoute())
+	http.ListenAndServe(":8002", RegisterRoute())
 }
 
 // cache Demo
@@ -70,7 +70,7 @@ func RegisterRoute() http.Handler {
 	router.HandleFunc("/api/save_gs_name", middleware(Crontroller.HandlerSaveGsName))            // 保存公司名称
 	router.HandleFunc("/api/user_view_cj", middleware(Crontroller.HandlerUserViewCj))            // 用户查看抽奖
 	router.HandleFunc("/api/user_join_cj", middleware(Crontroller.HandlerUserJoinCj))            // 用户参与抽奖
-	router.HandleFunc("/api/save_zj_user", middleware(Crontroller.HandlerSaveZjUser))            // 用户参与抽奖
+	router.HandleFunc("/api/save_zj_user", middleware(Crontroller.HandlerSaveZjUser))            // 保存中奖用户
 	router.HandleFunc("/api/send_cj_dyamic_msg", middleware(Crontroller.HandlerSendCjDyamicMsg)) // 发送抽奖互动消息
 
 	return router
@@ -204,8 +204,9 @@ type JoinCjReq struct {
 }
 
 type UserViewCjResp struct {
-	Num    int    `json:"num"`
-	GsName string `json:"gs_name"`
+	Num    int        `json:"num"`
+	GsName string     `json:"gs_name"`
+	L      []cjOption `json:"l"`
 }
 
 func (uc *uLogic) HandlerUserViewCj(w http.ResponseWriter, r *http.Request) {
@@ -238,6 +239,7 @@ func (uc *uLogic) HandlerUserViewCj(w http.ResponseWriter, r *http.Request) {
 		respOk(w, UserViewCjResp{
 			Num:    userNum,
 			GsName: v.GsName,
+			L:      v.L,
 		})
 	}
 }
@@ -463,7 +465,7 @@ func createQrcodeUrl(uuid string) error {
 	fileName := fmt.Sprintf("cj_qrcode/%s.png", uuid)
 
 	// 生成二维码
-	err := qrcode.WriteFile(fileName, qrcode.Medium, 256, fileName)
+	err := qrcode.WriteFile("http://www.cj.yirisanqiu.com/mobile?lid="+uuid, qrcode.Medium, 256, fileName)
 	if err != nil {
 		return err
 	}
