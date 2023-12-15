@@ -8,7 +8,7 @@ function startapi(){
   export GOPROXY=https://goproxy.cn
   rm -rf cj-server
   go build -o cj-server main.go
-  chmod +x cj-serer
+  chmod +x cj-server
   nohup ./cj-server &
 }
 # 检查端口是否被占用
